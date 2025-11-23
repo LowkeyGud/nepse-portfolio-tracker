@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
-import { Check, Edit2, Plus, Trash2, X } from 'lucide-react';
+import { Check, Download, Edit2, Plus, Trash2, Upload, X } from 'lucide-react';
 import { useState } from 'react';
 import { useLanguage } from '../LanguageContext';
 
-const ProfileManagerModal = ({ isOpen, onClose, profiles, onUpdateProfiles, activeProfileId, onSetActiveProfile }) => {
+const ProfileManagerModal = ({ isOpen, onClose, profiles, onUpdateProfiles, activeProfileId, onSetActiveProfile, onExport, onImport }) => {
     const { t } = useLanguage();
     const [newProfileName, setNewProfileName] = useState('');
     const [editingId, setEditingId] = useState(null);
@@ -117,6 +117,20 @@ const ProfileManagerModal = ({ isOpen, onClose, profiles, onUpdateProfiles, acti
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+
+                <div style={{ marginTop: '2rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>{t('dataManagement') || 'Data Management'}</h3>
+                    <div className="flex gap-4">
+                        <button onClick={onExport} className="glass-panel" style={{ flex: 1, padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                            <Download size={18} />
+                            {t('exportBackup') || 'Export Backup'}
+                        </button>
+                        <button onClick={onImport} className="glass-panel" style={{ flex: 1, padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                            <Upload size={18} />
+                            {t('importBackup') || 'Import Backup'}
+                        </button>
                     </div>
                 </div>
             </motion.div>

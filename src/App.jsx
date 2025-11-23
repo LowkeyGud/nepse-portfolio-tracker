@@ -2,6 +2,7 @@ import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/c
 import { Activity, ArrowDown, ArrowUp, Plus, Search, Wallet } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import AddStockModal from './components/AddStockModal';
+import ImportSelectionModal from './components/ImportSelectionModal';
 import LanguageToggle from './components/LanguageToggle';
 import ProfileManagerModal from './components/ProfileManagerModal';
 import StockCard from './components/StockCard';
@@ -23,6 +24,8 @@ function App() {
   const [isMarketLoading, setIsMarketLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProfileManagerOpen, setIsProfileManagerOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importedProfiles, setImportedProfiles] = useState([]);
 
   // Load Portfolio (Guest: LocalStorage, User: MongoDB)
   useEffect(() => {
@@ -229,6 +232,58 @@ function App() {
   const portfolioDailyChange = portfolioStocks.reduce((acc, stock) => acc + ((stock.currentPrice - stock.previousPrice) * stock.quantity), 0);
   const isPortfolioPositive = portfolioDailyChange >= 0;
 
+  // Export/Import Handlers
+  const handleExport = () => {
+    const dataStr = JSON.stringify(profiles, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `nepse-portfolio-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportClick = () => {
+    document.getElementById('import-file-input').click();
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (Array.isArray(data)) {
+            setImportedProfiles(data);
+            setIsImportModalOpen(true);
+          } else {
+            alert('Invalid backup file format');
+          }
+        } catch (error) {
+          alert('Failed to parse backup file');
+        }
+      };
+      reader.readAsText(file);
+    }
+    event.target.value = null;
+  };
+
+  const handleImportConfirm = (selectedProfiles) => {
+    const newProfiles = [...profiles];
+    selectedProfiles.forEach(imported => {
+      const newId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      newProfiles.push({
+        ...imported,
+        id: newId,
+        name: `${imported.name} (Imported)`
+      });
+    });
+    setProfiles(newProfiles);
+  };
+
   return (
     <div className="container">
       <header className="app-header">
@@ -374,6 +429,23 @@ function App() {
         onUpdateProfiles={setProfiles}
         activeProfileId={activeProfileId}
         onSetActiveProfile={setActiveProfileId}
+        onExport={handleExport}
+        onImport={handleImportClick}
+      />
+
+      <ImportSelectionModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        importedProfiles={importedProfiles}
+        onConfirm={handleImportConfirm}
+      />
+
+      <input
+        type="file"
+        id="import-file-input"
+        style={{ display: 'none' }}
+        accept=".json"
+        onChange={handleFileChange}
       />
     </div >
   );
