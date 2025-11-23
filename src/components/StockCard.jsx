@@ -3,9 +3,27 @@ import { ArrowDown, ArrowUp, Edit2, Minus, Save, X } from 'lucide-react';
 import { useState } from 'react';
 import { useLanguage } from '../LanguageContext';
 
-const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
+const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote, isLoading, profileName }) => {
     const { t } = useLanguage();
     const { symbol, name, currentPrice, previousPrice, sector, note } = stock;
+
+    if (isLoading) {
+        return (
+            <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <div className="skeleton" style={{ width: '80px', height: '24px', marginBottom: '8px' }}></div>
+                        <div className="skeleton" style={{ width: '150px', height: '16px' }}></div>
+                    </div>
+                    <div className="skeleton" style={{ width: '60px', height: '20px', borderRadius: '999px' }}></div>
+                </div>
+                <div style={{ marginTop: 'auto' }}>
+                    <div className="skeleton" style={{ width: '120px', height: '32px', marginBottom: '8px' }}></div>
+                    <div className="skeleton" style={{ width: '100px', height: '16px' }}></div>
+                </div>
+            </div>
+        );
+    }
 
     const [isEditingNote, setIsEditingNote] = useState(false);
     const [noteText, setNoteText] = useState(note || '');
@@ -84,6 +102,11 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
                 <div>
                     <div className="flex items-center gap-2">
                         <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{symbol}</h3>
+                        {profileName && (
+                            <span style={{ fontSize: '0.7rem', background: 'var(--accent-primary)', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
+                                {profileName}
+                            </span>
+                        )}
                         {isPositiveCircuit && <span style={{ fontSize: '0.7rem', background: '#10b981', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{t('positiveCircuit')}</span>}
                         {isNegativeCircuit && <span style={{ fontSize: '0.7rem', background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{t('negativeCircuit')}</span>}
                     </div>

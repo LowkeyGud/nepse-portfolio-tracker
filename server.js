@@ -31,10 +31,21 @@ mongoose.connect(mongoUri)
 // Portfolio Schema
 const PortfolioSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true },
+  // Legacy field support
   stocks: [{
     symbol: String,
     quantity: Number,
     note: { type: String, default: '' }
+  }],
+  // New Profiles field
+  profiles: [{
+    id: String,
+    name: String,
+    stocks: [{
+      symbol: String,
+      quantity: Number,
+      note: { type: String, default: '' }
+    }]
   }]
 }, { timestamps: true });
 
@@ -45,8 +56,26 @@ app.get('/api/portfolio/:userId', async (req, res) => {
   try {
     console.log('📥 Fetching portfolio for user:', req.params.userId);
     const portfolio = await Portfolio.findOne({ userId: req.params.userId });
-    console.log('📦 Portfolio found:', portfolio ? `${portfolio.stocks.length} stocks` : 'none');
-    res.json(portfolio ? portfolio.stocks : []);
+    
+    if (portfolio) {
+      if (portfolio.profiles && portfolio.profiles.length > 0) {
+        console.log(`📦 Found ${portfolio.profiles.length} profiles`);
+        res.json(portfolio.profiles);
+      } else if (portfolio.stocks && portfolio.stocks.length > 0) {
+        console.log('📦 Found legacy stocks, migrating to default profile');
+        // Migration: Return legacy stocks as a default profile
+        res.json([{
+          id: 'default',
+          name: 'Main Portfolio',
+          stocks: portfolio.stocks
+        }]);
+      } else {
+        console.log('📦 Empty portfolio');
+        res.json([]);
+      }
+    } else {
+      res.json([]);
+    }
   } catch (error) {
     console.error('❌ Error fetching portfolio:', error.message);
     res.status(500).json({ error: 'Failed to fetch portfolio' });
@@ -55,16 +84,16 @@ app.get('/api/portfolio/:userId', async (req, res) => {
 
 app.post('/api/portfolio', async (req, res) => {
   try {
-    const { userId, stocks } = req.body;
-    console.log('💾 Saving portfolio for user:', userId, '| Stocks:', stocks.length);
-    console.log('📝 Stock data:', JSON.stringify(stocks, null, 2));
+    const { userId, profiles } = req.body;
+    console.log('💾 Saving profiles for user:', userId, '| Profiles:', profiles?.length);
+    
     const portfolio = await Portfolio.findOneAndUpdate(
       { userId },
-      { stocks },
+      { profiles }, // Only save to profiles field
       { new: true, upsert: true }
     );
     console.log('✅ Portfolio saved successfully');
-    res.json(portfolio.stocks);
+    res.json(portfolio.profiles);
   } catch (error) {
     console.error('❌ Error saving portfolio:', error.message);
     res.status(500).json({ error: 'Failed to save portfolio' });

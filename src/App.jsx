@@ -1,6 +1,6 @@
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 import { Activity, ArrowDown, ArrowUp, Plus, Search, Wallet } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AddStockModal from './components/AddStockModal';
 import LanguageToggle from './components/LanguageToggle';
 import StockCard from './components/StockCard';
@@ -16,8 +16,10 @@ function App() {
   const [isLive, setIsLive] = useState(true);
 
   // Portfolio State
-  const [userPortfolio, setUserPortfolio] = useState([]);
+  const [profiles, setProfiles] = useState([{ id: 'default', name: 'Main Portfolio', stocks: [] }]);
+  const [activeProfileId, setActiveProfileId] = useState('all');
   const [isPortfolioInitialized, setIsPortfolioInitialized] = useState(false);
+  const [isMarketLoading, setIsMarketLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Load Portfolio (Guest: LocalStorage, User: MongoDB)
@@ -32,14 +34,30 @@ function App() {
       fetch(`${apiUrl}/api/portfolio/${user.id}`)
         .then(res => res.json())
         .then(data => {
-          if (Array.isArray(data)) setUserPortfolio(data);
+          if (Array.isArray(data)) {
+            // Check if data is new format (profiles) or old format (stocks)
+            if (data.length > 0 && data[0].stocks) {
+              setProfiles(data);
+            } else {
+              // Legacy or empty
+              setProfiles([{ id: 'default', name: 'Main Portfolio', stocks: data }]);
+            }
+          }
         })
         .catch(err => console.error("Failed to load portfolio", err))
         .finally(() => setIsPortfolioInitialized(true));
     } else {
       // Load from LocalStorage for guests
       const saved = localStorage.getItem('nepse-portfolio');
-      if (saved) setUserPortfolio(JSON.parse(saved));
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Handle legacy localstorage
+        if (Array.isArray(parsed) && parsed.length > 0 && !parsed[0].stocks) {
+          setProfiles([{ id: 'default', name: 'Main Portfolio', stocks: parsed }]);
+        } else {
+          setProfiles(parsed);
+        }
+      }
       setIsPortfolioInitialized(true);
     }
   }, [isLoaded, isSignedIn, user]);
@@ -48,30 +66,30 @@ function App() {
   useEffect(() => {
     if (!isLoaded || !isPortfolioInitialized) return;
 
-    console.log('💾 Save Portfolio Effect Triggered', {
-      isSignedIn,
-      userId: user?.id,
-      portfolioLength: userPortfolio.length
-    });
+    // console.log('💾 Save Portfolio Effect Triggered', {
+    //   isSignedIn,
+    //   userId: user?.id,
+    //   portfolioLength: userPortfolio.length
+    // });
 
     if (isSignedIn && user) {
       // Save to Backend
       const apiUrl = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:3001');
-      console.log('📤 Sending portfolio to backend...', userPortfolio);
+      console.log('📤 Sending profiles to backend...', profiles);
       fetch(`${apiUrl}/api/portfolio`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, stocks: userPortfolio })
+        body: JSON.stringify({ userId: user.id, profiles })
       })
         .then(res => res.json())
         .then(data => console.log('✅ Portfolio saved to backend:', data))
         .catch(err => console.error("❌ Failed to save portfolio to backend:", err));
     } else {
       // Save to LocalStorage for guests
-      console.log('💾 Saving to localStorage...', userPortfolio);
-      localStorage.setItem('nepse-portfolio', JSON.stringify(userPortfolio));
+      console.log('💾 Saving to localStorage...', profiles);
+      localStorage.setItem('nepse-portfolio', JSON.stringify(profiles));
     }
-  }, [userPortfolio, isLoaded, isSignedIn, user, isPortfolioInitialized]);
+  }, [profiles, isLoaded, isSignedIn, user, isPortfolioInitialized]);
 
   // Fetch live market data
   useEffect(() => {
@@ -120,38 +138,81 @@ function App() {
     return () => clearInterval(interval);
   }, [isLive]);
 
-  const addToPortfolio = ({ symbol, quantity, note }) => {
-    setUserPortfolio(prev => {
-      const existing = prev.find(p => p.symbol === symbol);
-      if (existing) {
-        return prev.map(p => p.symbol === symbol ? { ...p, quantity: p.quantity + quantity, note: note || p.note } : p);
-      }
-      return [...prev, { symbol, quantity, note: note || '' }];
+  const addToPortfolio = (newStock) => {
+    setProfiles(currentProfiles => {
+      const targetProfileId = activeProfileId === 'all' ? currentProfiles[0].id : activeProfileId;
+
+      return currentProfiles.map(profile => {
+        if (profile.id !== targetProfileId) return profile;
+
+        const existingIndex = profile.stocks.findIndex(s => s.symbol === newStock.symbol);
+        if (existingIndex >= 0) {
+          const updatedStocks = [...profile.stocks];
+          updatedStocks[existingIndex] = {
+            ...updatedStocks[existingIndex],
+            quantity: updatedStocks[existingIndex].quantity + newStock.quantity,
+            note: newStock.note || updatedStocks[existingIndex].note
+          };
+          return { ...profile, stocks: updatedStocks };
+        } else {
+          return { ...profile, stocks: [...profile.stocks, newStock] };
+        }
+      });
     });
   };
 
-  const removeFromPortfolio = (symbol) => {
-    setUserPortfolio(prev => prev.filter(p => p.symbol !== symbol));
+  const removeFromPortfolio = (symbol, profileId) => {
+    setProfiles(currentProfiles => {
+      return currentProfiles.map(profile => {
+        if (profileId && profile.id !== profileId) return profile;
+        return {
+          ...profile,
+          stocks: profile.stocks.filter(s => s.symbol !== symbol)
+        };
+      });
+    });
   };
 
-  const updateNote = (symbol, newNote) => {
-    setUserPortfolio(prev => prev.map(p => p.symbol === symbol ? { ...p, note: newNote } : p));
+  const updateNote = (symbol, newNote, profileId) => {
+    setProfiles(currentProfiles => {
+      return currentProfiles.map(profile => {
+        if (profileId && profile.id !== profileId) return profile;
+        return {
+          ...profile,
+          stocks: profile.stocks.map(s =>
+            s.symbol === symbol ? { ...s, note: newNote } : s
+          )
+        };
+      });
+    });
   };
 
   // Filter stocks to only show portfolio items
-  const portfolioStocks = userPortfolio.map(item => {
-    const stockData = stocks.find(s => s.symbol === item.symbol) || {
-      symbol: item.symbol,
-      name: item.symbol,
-      currentPrice: 0,
-      previousPrice: 0,
-      sector: 'Unknown'
-    };
-    return { ...stockData, quantity: item.quantity, note: item.note || '' };
-  }).filter(stock =>
-    stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    stock.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const displayedStocks = useMemo(() => {
+    if (activeProfileId === 'all') {
+      return profiles.flatMap(p => p.stocks.map(s => ({ ...s, profileName: p.name, profileId: p.id })));
+    }
+    const profile = profiles.find(p => p.id === activeProfileId);
+    return profile ? profile.stocks.map(s => ({ ...s, profileName: profile.name, profileId: profile.id })) : [];
+  }, [profiles, activeProfileId]);
+
+  const portfolioStocks = useMemo(() => {
+    return displayedStocks.map(stock => {
+      const marketData = stocks.find(s => s.symbol === stock.symbol);
+      return {
+        ...stock,
+        ...marketData, // This overrides name/sector from portfolio if available in market data
+        // Ensure we keep the portfolio specific fields
+        quantity: stock.quantity,
+        note: stock.note,
+        profileName: stock.profileName,
+        profileId: stock.profileId
+      };
+    }).filter(stock =>
+      stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      stock.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [displayedStocks, stocks, searchTerm]);
 
   // Calculate Portfolio Totals
   const portfolioTotalValue = portfolioStocks.reduce((acc, stock) => acc + (stock.currentPrice * stock.quantity), 0);
@@ -301,52 +362,89 @@ function App() {
           </div>
         </div>
 
-        <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '500px' }}>
-          <Search size={20} className="text-muted" />
-          <input
-            type="text"
-            placeholder={t('searchPlaceholder')}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-primary)',
-              width: '100%',
-              padding: '0.5rem 0',
-              fontSize: '1rem',
-              outline: 'none'
+        <div className="flex items-center gap-4">
+          <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '500px' }}>
+            <Search size={20} className="text-muted" />
+            <input
+              type="text"
+              placeholder={t('searchPlaceholder')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-primary)',
+                width: '100%',
+                padding: '0.5rem 0',
+                fontSize: '1rem',
+                outline: 'none'
+              }}
+            />
+          </div>
+
+          <select
+            value={activeProfileId}
+            onChange={(e) => {
+              if (e.target.value === 'new') {
+                const name = prompt("Enter new profile name:");
+                if (name) {
+                  const newId = Date.now().toString();
+                  setProfiles([...profiles, { id: newId, name, stocks: [] }]);
+                  setActiveProfileId(newId);
+                }
+              } else {
+                setActiveProfileId(e.target.value);
+              }
             }}
-          />
+            className="glass-panel"
+            style={{
+              padding: '0.75rem',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--glass-border)',
+              outline: 'none',
+              cursor: 'pointer',
+              background: 'var(--bg-card)'
+            }}
+          >
+            <option value="all" style={{ background: '#1e293b' }}>All Portfolios</option>
+            {profiles.map(p => (
+              <option key={p.id} value={p.id} style={{ background: '#1e293b' }}>{p.name}</option>
+            ))}
+            <option value="new" style={{ background: '#1e293b' }}>+ Create Profile</option>
+          </select>
         </div>
       </header>
 
-      {userPortfolio.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
-          <div style={{ marginBottom: '1rem' }}>
-            <Wallet size={48} style={{ opacity: 0.5 }} />
+      {
+        portfolioStocks.length === 0 && !isMarketLoading ? (
+          <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)' }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <Wallet size={48} style={{ opacity: 0.5 }} />
+            </div>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{t('portfolioEmpty')}</h3>
+            <p>{t('portfolioEmptyDesc')}</p>
           </div>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{t('portfolioEmpty')}</h3>
-          <p>{t('portfolioEmptyDesc')}</p>
-        </div>
-      ) : (
-        <main style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-          gap: '1.5rem'
-        }}>
-          {portfolioStocks.map((stock, index) => (
-            <StockCard
-              key={stock.symbol}
-              stock={stock}
-              index={index}
-              quantity={stock.quantity}
-              onDelete={removeFromPortfolio}
-              onUpdateNote={updateNote}
-            />
-          ))}
-        </main>
-      )}
+        ) : (
+          <main style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+            gap: '1.5rem'
+          }}>
+            {portfolioStocks.map((stock, index) => (
+              <StockCard
+                key={`${stock.symbol}-${stock.profileId}`}
+                stock={stock}
+                index={index}
+                quantity={stock.quantity}
+                onDelete={(symbol) => removeFromPortfolio(symbol, stock.profileId)}
+                onUpdateNote={(symbol, note) => updateNote(symbol, note, stock.profileId)}
+                isLoading={isMarketLoading}
+                profileName={activeProfileId === 'all' ? stock.profileName : null}
+              />
+            ))}
+          </main>
+        )
+      }
 
       <AddStockModal
         isOpen={isModalOpen}
@@ -354,7 +452,7 @@ function App() {
         onAdd={addToPortfolio}
         availableStocks={stocks}
       />
-    </div>
+    </div >
   );
 }
 
