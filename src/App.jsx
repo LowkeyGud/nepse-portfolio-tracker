@@ -218,7 +218,10 @@ function App() {
     }).filter(stock =>
       stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
       stock.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ).sort((a, b) => {
+      const getChange = (s) => s.previousPrice ? ((s.currentPrice - s.previousPrice) / s.previousPrice) : 0;
+      return getChange(a) - getChange(b);
+    });
   }, [displayedStocks, stocks, searchTerm]);
 
   // Calculate Portfolio Totals
