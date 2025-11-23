@@ -34,7 +34,7 @@ const ImportSelectionModal = ({ isOpen, onClose, importedProfiles, onConfirm }) 
                 style={{ width: '100%', maxWidth: '500px', padding: '2rem', margin: '1rem', background: '#1e293b' }}
             >
                 <div className="flex justify-between items-center" style={{ marginBottom: '1.5rem' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{t('selectProfilesToImport') || 'Select Profiles to Import'}</h2>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{t('selectProfilesToImport')}</h2>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                         <X size={24} />
                     </button>
@@ -68,7 +68,7 @@ const ImportSelectionModal = ({ isOpen, onClose, importedProfiles, onConfirm }) 
                             <div>
                                 <div style={{ fontWeight: 600 }}>{profile.name}</div>
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                    {profile.stocks.length} {t('stocks') || 'stocks'}
+                                    {profile.stocks.length} {t('stocks')}
                                 </div>
                             </div>
                         </div>
@@ -92,7 +92,7 @@ const ImportSelectionModal = ({ isOpen, onClose, importedProfiles, onConfirm }) 
                             opacity: selectedIds.length === 0 ? 0.5 : 1
                         }}
                     >
-                        {t('importSelected') || 'Import Selected'}
+                        {t('importSelected')}
                     </button>
                 </div>
             </motion.div>

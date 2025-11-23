@@ -121,15 +121,15 @@ const ProfileManagerModal = ({ isOpen, onClose, profiles, onUpdateProfiles, acti
                 </div>
 
                 <div style={{ marginTop: '2rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>{t('dataManagement') || 'Data Management'}</h3>
+                    <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: 'var(--text-secondary)' }}>{t('dataManagement')}</h3>
                     <div className="flex gap-4">
                         <button onClick={onExport} className="glass-panel" style={{ flex: 1, padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--text-primary)' }}>
                             <Download size={18} />
-                            {t('exportBackup') || 'Export Backup'}
+                            {t('exportBackup')}
                         </button>
                         <button onClick={onImport} className="glass-panel" style={{ flex: 1, padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--text-primary)' }}>
                             <Upload size={18} />
-                            {t('importBackup') || 'Import Backup'}
+                            {t('importBackup')}
                         </button>
                     </div>
                 </div>

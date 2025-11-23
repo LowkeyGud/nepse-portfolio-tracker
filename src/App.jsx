@@ -447,6 +447,30 @@ function App() {
         accept=".json"
         onChange={handleFileChange}
       />
+
+      <footer style={{
+        marginTop: '4rem',
+        paddingTop: '2rem',
+        borderTop: '1px solid var(--glass-border)',
+        textAlign: 'center',
+        color: 'var(--text-secondary)',
+        fontSize: '0.9rem'
+      }}>
+        <p style={{ margin: 0 }}>
+          Made with ❤️ by <a
+            href="https://twitter.com/lowkeygud"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: 'var(--accent-primary)',
+              textDecoration: 'none',
+              fontWeight: 600
+            }}
+          >
+            @lowkeygud
+          </a> (Sushil/CM)
+        </p>
+      </footer>
     </div >
   );
 }
