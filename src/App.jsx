@@ -458,7 +458,7 @@ function App() {
       }}>
         <p style={{ margin: 0 }}>
           Made with ❤️ by <a
-            href="https://twitter.com/lowkeygud"
+            href="https://github.com/lowkeygud"
             target="_blank"
             rel="noopener noreferrer"
             style={{
