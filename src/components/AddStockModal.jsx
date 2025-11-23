@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { Plus, Search, X } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '../LanguageContext';
 
 const AddStockModal = ({ isOpen, onClose, onAdd, availableStocks }) => {
+    const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStock, setSelectedStock] = useState(null);
     const [quantity, setQuantity] = useState('10');
@@ -52,7 +54,7 @@ const AddStockModal = ({ isOpen, onClose, onAdd, availableStocks }) => {
                 style={{ width: '100%', maxWidth: '500px', padding: '2rem', margin: '1rem', background: '#1e293b' }}
             >
                 <div className="flex justify-between items-center" style={{ marginBottom: '1.5rem' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Add to Portfolio</h2>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{t('addToPortfolio')}</h2>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
                         <X size={24} />
                     </button>
@@ -61,13 +63,13 @@ const AddStockModal = ({ isOpen, onClose, onAdd, availableStocks }) => {
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     {!selectedStock ? (
                         <div className="flex flex-col gap-2">
-                            <label className="text-muted">Search Stock</label>
+                            <label className="text-muted">{t('searchStock')}</label>
                             <div className="glass-panel" style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(0,0,0,0.2)' }}>
                                 <Search size={18} className="text-muted" />
                                 <input
                                     autoFocus
                                     type="text"
-                                    placeholder="e.g. NABIL"
+                                    placeholder={t('searchPlaceholder')}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     style={{ background: 'transparent', border: 'none', color: 'white', width: '100%', outline: 'none' }}
@@ -118,12 +120,12 @@ const AddStockModal = ({ isOpen, onClose, onAdd, availableStocks }) => {
                                     onClick={() => setSelectedStock(null)}
                                     style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.9rem' }}
                                 >
-                                    Change
+                                    {t('change')}
                                 </button>
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-muted">Quantity (Shares)</label>
+                                <label className="text-muted">{t('quantity')}</label>
                                 <input
                                     type="number"
                                     min="1"
@@ -143,11 +145,11 @@ const AddStockModal = ({ isOpen, onClose, onAdd, availableStocks }) => {
                             </div>
 
                             <div className="flex flex-col gap-2">
-                                <label className="text-muted">Note (Optional)</label>
+                                <label className="text-muted">{t('noteOptional')}</label>
                                 <textarea
                                     value={note}
                                     onChange={(e) => setNote(e.target.value)}
-                                    placeholder="Add a note about this investment..."
+                                    placeholder={t('notePlaceholder')}
                                     className="glass-panel"
                                     style={{
                                         padding: '1rem',
@@ -177,7 +179,7 @@ const AddStockModal = ({ isOpen, onClose, onAdd, availableStocks }) => {
                                     cursor: 'pointer'
                                 }}
                             >
-                                Add to Portfolio
+                                {t('addToPortfolio')}
                             </button>
                         </>
                     )}

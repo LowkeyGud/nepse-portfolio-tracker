@@ -7,6 +7,7 @@ import { stocks as initialStocks } from './data/stocks';
 
 function App() {
   const { user, isLoaded, isSignedIn } = useUser();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [stocks, setStocks] = useState(initialStocks);
   const [lastUpdated, setLastUpdated] = useState(new Date());
@@ -22,7 +23,9 @@ function App() {
 
     if (isSignedIn && user) {
       // Fetch from Backend
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      // In production (Vercel), use relative path /api/...
+      // In development, use VITE_API_URL or localhost:3001
+      const apiUrl = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:3001');
       fetch(`${apiUrl}/api/portfolio/${user.id}`)
         .then(res => res.json())
         .then(data => {
@@ -48,7 +51,7 @@ function App() {
 
     if (isSignedIn && user) {
       // Save to Backend
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const apiUrl = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:3001');
       console.log('📤 Sending portfolio to backend...', userPortfolio);
       fetch(`${apiUrl}/api/portfolio`, {
         method: 'POST',
@@ -69,7 +72,7 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const apiUrl = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:3001');
         const response = await fetch(`${apiUrl}/api/stocks`);
         const data = await response.json();
 
@@ -165,11 +168,11 @@ function App() {
             </div>
             <div>
               <h1 style={{ fontSize: '2rem', margin: 0, fontWeight: 800, letterSpacing: '-0.03em' }}>
-                My <span style={{ color: 'var(--accent-primary)' }}>Portfolio</span>
+                <span style={{ color: 'var(--accent-primary)' }}>{t('myPortfolio')}</span>
               </h1>
               <div className="flex items-center gap-2">
                 <span className="text-muted" style={{ fontSize: '0.875rem' }}>
-                  Real-time NEPSE Wealth Tracker
+                  {t('subtitle')}
                 </span>
                 {isLive && (
                   <span style={{
@@ -183,7 +186,7 @@ function App() {
                     borderRadius: '999px'
                   }}>
                     <span className="animate-pulse" style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }}></span>
-                    LIVE
+                    {t('live')}
                   </span>
                 )}
               </div>
@@ -207,7 +210,7 @@ function App() {
                 }}
               >
                 <Activity size={18} />
-                <span>{isLive ? 'Live' : 'Paused'}</span>
+                <span>{isLive ? t('live') : t('paused')}</span>
               </button>
 
               <button
@@ -226,9 +229,12 @@ function App() {
                 }}
               >
                 <Plus size={18} />
-                <span>Add Stock</span>
+                <span>{t('addStock')}</span>
               </button>
             </div>
+
+            {/* Language Toggle */}
+            <LanguageToggle />
 
             {/* Auth Buttons */}
             <div style={{ marginLeft: '1rem' }}>
@@ -257,7 +263,7 @@ function App() {
                       e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
                     }}
                   >
-                    Sign In
+                    {t('signIn')}
                   </button>
                 </SignInButton>
               </SignedOut>
@@ -272,10 +278,10 @@ function App() {
         <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)' }}>
           <div className="flex flex-col gap-4">
             <div className="flex justify-between items-start">
-              <div className="text-muted">Total Portfolio Value</div>
+              <div className="text-muted">{t('totalPortfolioValue')}</div>
               <SignedOut>
                 <span style={{ fontSize: '0.8rem', color: 'var(--accent-danger)', background: 'rgba(239,68,68,0.1)', padding: '2px 8px', borderRadius: '4px' }}>
-                  Guest Mode (Not Saved)
+                  {t('guestMode')}
                 </span>
               </SignedOut>
             </div>
@@ -285,7 +291,7 @@ function App() {
             <div className={`flex items-center gap-2 ${isPortfolioPositive ? 'text-success' : 'text-danger'}`} style={{ fontSize: '1.1rem', fontWeight: 500 }}>
               {isPortfolioPositive ? <ArrowUp size={24} /> : <ArrowDown size={24} />}
               <span>Rs. {Math.abs(portfolioDailyChange).toLocaleString()}</span>
-              <span className="text-muted" style={{ fontSize: '0.9rem' }}>Today's Change</span>
+              <span className="text-muted" style={{ fontSize: '0.9rem' }}>{t('todaysChange')}</span>
             </div>
           </div>
         </div>
@@ -294,7 +300,7 @@ function App() {
           <Search size={20} className="text-muted" />
           <input
             type="text"
-            placeholder="Search your holdings..."
+            placeholder={t('searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
@@ -315,8 +321,8 @@ function App() {
           <div style={{ marginBottom: '1rem' }}>
             <Wallet size={48} style={{ opacity: 0.5 }} />
           </div>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Your portfolio is empty</h3>
-          <p>Click "Add Stock" to start tracking your investments.</p>
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{t('portfolioEmpty')}</h3>
+          <p>{t('portfolioEmptyDesc')}</p>
         </div>
       ) : (
         <main style={{

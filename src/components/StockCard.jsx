@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { ArrowDown, ArrowUp, Edit2, Minus, Save, X } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '../LanguageContext';
 
 const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
+    const { t } = useLanguage();
     const { symbol, name, currentPrice, previousPrice, sector, note } = stock;
 
     const [isEditingNote, setIsEditingNote] = useState(false);
@@ -82,8 +84,8 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
                 <div>
                     <div className="flex items-center gap-2">
                         <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{symbol}</h3>
-                        {isPositiveCircuit && <span style={{ fontSize: '0.7rem', background: '#10b981', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>+CIRCUIT</span>}
-                        {isNegativeCircuit && <span style={{ fontSize: '0.7rem', background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>-CIRCUIT</span>}
+                        {isPositiveCircuit && <span style={{ fontSize: '0.7rem', background: '#10b981', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{t('positiveCircuit')}</span>}
+                        {isNegativeCircuit && <span style={{ fontSize: '0.7rem', background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>{t('negativeCircuit')}</span>}
                     </div>
                     <p className="text-muted" style={{ margin: '0.25rem 0 0', fontSize: '0.875rem' }}>{name}</p>
                 </div>
@@ -102,7 +104,7 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
                             onClick={() => onDelete(symbol)}
                             style={{ fontSize: '0.75rem', color: 'var(--accent-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
                         >
-                            Remove
+                            {t('remove')}
                         </button>
                     )}
                 </div>
@@ -113,14 +115,14 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
                     <>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                             <div>
-                                <div className="text-muted" style={{ fontSize: '0.75rem' }}>Holdings</div>
-                                <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>{quantity} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>Units</span></div>
+                                <div className="text-muted" style={{ fontSize: '0.75rem' }}>{t('holdings')}</div>
+                                <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>{quantity} <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>{t('units')}</span></div>
                             </div>
                             <div>
-                                <div className="text-muted" style={{ fontSize: '0.75rem' }}>Current Price</div>
+                                <div className="text-muted" style={{ fontSize: '0.75rem' }}>{t('currentPrice')}</div>
                                 <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>Rs. {currentPrice.toLocaleString()}</div>
                                 <div className="text-muted" style={{ fontSize: '0.75rem', marginTop: '2px' }}>
-                                    Yesterday: Rs. {previousPrice.toLocaleString()}
+                                    {t('yesterday')}: Rs. {previousPrice.toLocaleString()}
                                 </div>
                             </div>
                         </div>
@@ -128,7 +130,7 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
                         <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
                             <div className="flex justify-between items-end">
                                 <div>
-                                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>Total Value</div>
+                                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>{t('totalValue')}</div>
                                     <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>Rs. {totalValue.toLocaleString()}</div>
                                 </div>
                                 <div className={`flex flex-col items-end ${isPositive ? 'text-success' : isNegative ? 'text-danger' : 'text-muted'}`}>
@@ -148,7 +150,7 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
                         {(note || isEditingNote) && (
                             <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '1rem', marginTop: '1rem' }}>
                                 <div className="flex justify-between items-center" style={{ marginBottom: '0.5rem' }}>
-                                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>Note</div>
+                                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>{t('note')}</div>
                                     {!isEditingNote && onUpdateNote && (
                                         <button
                                             onClick={() => setIsEditingNote(true)}
@@ -163,7 +165,7 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
                                         <textarea
                                             value={noteText}
                                             onChange={(e) => setNoteText(e.target.value)}
-                                            placeholder="Add a note..."
+                                            placeholder={t('notePlaceholder')}
                                             style={{
                                                 width: '100%',
                                                 padding: '0.5rem',
@@ -194,7 +196,7 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
                                                     gap: '4px'
                                                 }}
                                             >
-                                                <Save size={14} /> Save
+                                                <Save size={14} /> {t('save')}
                                             </button>
                                             <button
                                                 onClick={handleCancelEdit}
@@ -211,13 +213,13 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
                                                     gap: '4px'
                                                 }}
                                             >
-                                                <X size={14} /> Cancel
+                                                <X size={14} /> {t('cancel')}
                                             </button>
                                         </div>
                                     </div>
                                 ) : (
                                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: note ? 'normal' : 'italic' }}>
-                                        {note || 'No note added'}
+                                        {note || t('noNote')}
                                     </div>
                                 )}
                             </div>
@@ -241,7 +243,7 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
                                     gap: '4px'
                                 }}
                             >
-                                <Edit2 size={14} /> Add Note
+                                <Edit2 size={14} /> {t('addNote')}
                             </button>
                         )}
                     </>
@@ -262,7 +264,7 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote }) => {
                                 <span>{Math.abs(diff).toFixed(2)} ({Math.abs(percentChangeFormatted)}%)</span>
                             </div>
                             <div className="text-muted" style={{ fontSize: '0.875rem' }}>
-                                Yesterday LTP: Rs. {previousPrice.toLocaleString()}
+                                {t('yesterdayLTP')}: Rs. {previousPrice.toLocaleString()}
                             </div>
                         </div>
                     </>
