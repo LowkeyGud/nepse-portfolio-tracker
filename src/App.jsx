@@ -2,8 +2,10 @@ import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/c
 import { Activity, ArrowDown, ArrowUp, Plus, Search, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import AddStockModal from './components/AddStockModal';
+import LanguageToggle from './components/LanguageToggle';
 import StockCard from './components/StockCard';
 import { stocks as initialStocks } from './data/stocks';
+import { useLanguage } from './LanguageContext';
 
 function App() {
   const { user, isLoaded, isSignedIn } = useUser();
@@ -15,6 +17,7 @@ function App() {
 
   // Portfolio State
   const [userPortfolio, setUserPortfolio] = useState([]);
+  const [isPortfolioInitialized, setIsPortfolioInitialized] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Load Portfolio (Guest: LocalStorage, User: MongoDB)
@@ -31,17 +34,19 @@ function App() {
         .then(data => {
           if (Array.isArray(data)) setUserPortfolio(data);
         })
-        .catch(err => console.error("Failed to load portfolio", err));
+        .catch(err => console.error("Failed to load portfolio", err))
+        .finally(() => setIsPortfolioInitialized(true));
     } else {
       // Load from LocalStorage for guests
       const saved = localStorage.getItem('nepse-portfolio');
       if (saved) setUserPortfolio(JSON.parse(saved));
+      setIsPortfolioInitialized(true);
     }
   }, [isLoaded, isSignedIn, user]);
 
   // Save Portfolio
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !isPortfolioInitialized) return;
 
     console.log('💾 Save Portfolio Effect Triggered', {
       isSignedIn,
@@ -62,11 +67,11 @@ function App() {
         .then(data => console.log('✅ Portfolio saved to backend:', data))
         .catch(err => console.error("❌ Failed to save portfolio to backend:", err));
     } else {
-      // Save to LocalStorage
+      // Save to LocalStorage for guests
       console.log('💾 Saving to localStorage...', userPortfolio);
       localStorage.setItem('nepse-portfolio', JSON.stringify(userPortfolio));
     }
-  }, [userPortfolio, isLoaded, isSignedIn, user]);
+  }, [userPortfolio, isLoaded, isSignedIn, user, isPortfolioInitialized]);
 
   // Fetch live market data
   useEffect(() => {
