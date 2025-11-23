@@ -200,7 +200,12 @@ function App() {
 
   const portfolioStocks = useMemo(() => {
     return displayedStocks.map(stock => {
-      const marketData = stocks.find(s => s.symbol === stock.symbol);
+      const marketData = stocks.find(s => s.symbol === stock.symbol) || {
+        currentPrice: 0,
+        previousPrice: 0,
+        sector: 'Unknown',
+        name: stock.symbol
+      };
       return {
         ...stock,
         ...marketData, // This overrides name/sector from portfolio if available in market data

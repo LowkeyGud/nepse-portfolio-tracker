@@ -28,8 +28,8 @@ const StockCard = ({ stock, index, quantity, onDelete, onUpdateNote, isLoading, 
     const [isEditingNote, setIsEditingNote] = useState(false);
     const [noteText, setNoteText] = useState(note || '');
 
-    const diff = currentPrice - previousPrice;
-    const percentChange = ((diff / previousPrice) * 100);
+    const diff = (currentPrice || 0) - (previousPrice || 0);
+    const percentChange = previousPrice ? ((diff / previousPrice) * 100) : 0;
     const percentChangeFormatted = percentChange.toFixed(2);
 
     const isPositive = diff > 0;
