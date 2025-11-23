@@ -231,130 +231,48 @@ function App() {
 
   return (
     <div className="container">
-      <header style={{ marginBottom: '3rem' }}>
-        <div className="flex justify-between items-center" style={{ marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div className="flex items-center gap-2">
+      <header className="app-header">
+        <div className="header-top">
+          <div className="brand">
             <div style={{
               background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
               padding: '0.75rem',
               borderRadius: '12px',
-              boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)'
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
             }}>
-              <Wallet color="white" size={28} />
+              <Activity size={32} color="white" />
             </div>
             <div>
-              <h1 style={{ fontSize: '2rem', margin: 0, fontWeight: 800, letterSpacing: '-0.03em' }}>
-                <span style={{ color: 'var(--accent-primary)' }}>{t('myPortfolio')}</span>
+              <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em', background: 'linear-gradient(to right, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                {t('myPortfolio')}
               </h1>
-              <div className="flex items-center gap-2">
-                <span className="text-muted" style={{ fontSize: '0.875rem' }}>
-                  {t('subtitle')}
-                </span>
-                {isLive && (
-                  <span style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                    fontSize: '0.75rem',
-                    color: 'var(--accent-success)',
-                    background: 'rgba(16, 185, 129, 0.1)',
-                    padding: '0.1rem 0.5rem',
-                    borderRadius: '999px'
-                  }}>
-                    <span className="animate-pulse" style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }}></span>
-                    {t('live')}
-                  </span>
-                )}
-              </div>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{t('subtitle')}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsLive(!isLive)}
-                className="glass-panel"
-                style={{
-                  padding: '0.75rem 1.25rem',
-                  color: isLive ? 'var(--accent-success)' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  transition: 'all 0.2s',
-                  borderColor: isLive ? 'var(--accent-success)' : 'var(--glass-border)'
-                }}
-              >
-                <Activity size={18} />
-                <span>{isLive ? t('live') : t('paused')}</span>
-              </button>
-
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="glass-panel"
-                style={{
-                  padding: '0.75rem 1.25rem',
-                  background: 'var(--accent-primary)',
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontWeight: 600
-                }}
-              >
-                <Plus size={18} />
-                <span>{t('addStock')}</span>
-              </button>
+          <div className="header-actions">
+            <div className="market-status">
+              <div className={`status-dot ${isLive ? 'live' : ''}`}></div>
+              {isLive ? t('live') : t('paused')}
             </div>
-
-            {/* Language Toggle */}
             <LanguageToggle />
-
-            {/* Auth Buttons */}
-            <div style={{ marginLeft: '1rem' }}>
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button
-                    style={{
-                      padding: '0.75rem 1.75rem',
-                      cursor: 'pointer',
-                      fontWeight: 700,
-                      fontSize: '0.95rem',
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
-                      transition: 'all 0.2s ease',
-                      letterSpacing: '0.02em'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.5)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
-                    }}
-                  >
-                    {t('signIn')}
-                  </button>
-                </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
-            </div>
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: { width: 40, height: 40 } } }} />
+            </SignedIn>
+            <SignedOut>
+              <SignInButton mode="modal">
+                <button className="add-stock-btn" style={{ background: 'var(--bg-secondary)' }}>
+                  {t('signIn')}
+                </button>
+              </SignInButton>
+            </SignedOut>
           </div>
         </div>
 
-        {/* Portfolio Summary Card */}
-        <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)' }}>
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-start">
-              <div className="text-muted">{t('totalPortfolioValue')}</div>
+        <div className="glass-panel" style={{ padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '2rem', background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.7) 100%)' }}>
+          <div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {t('totalPortfolioValue')}
               <SignedOut>
                 <span style={{ fontSize: '0.8rem', color: 'var(--accent-danger)', background: 'rgba(239,68,68,0.1)', padding: '2px 8px', borderRadius: '4px' }}>
                   {t('guestMode')}
@@ -364,7 +282,7 @@ function App() {
             <div style={{ fontSize: '3rem', fontWeight: 800, lineHeight: 1 }}>
               Rs. {portfolioTotalValue.toLocaleString()}
             </div>
-            <div className={`flex items-center gap-2 ${isPortfolioPositive ? 'text-success' : 'text-danger'}`} style={{ fontSize: '1.1rem', fontWeight: 500 }}>
+            <div className={`flex items-center gap-2 ${isPortfolioPositive ? 'text-success' : 'text-danger'}`} style={{ fontSize: '1.1rem', fontWeight: 500, marginTop: '0.5rem' }}>
               {isPortfolioPositive ? <ArrowUp size={24} /> : <ArrowDown size={24} />}
               <span>Rs. {Math.abs(portfolioDailyChange).toLocaleString()}</span>
               <span className="text-muted" style={{ fontSize: '0.9rem' }}>{t('todaysChange')}</span>
@@ -372,51 +290,42 @@ function App() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '1rem', maxWidth: '500px' }}>
+        <div className="header-controls">
+          <div className="search-bar glass-panel">
             <Search size={20} className="text-muted" />
             <input
               type="text"
               placeholder={t('searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-primary)',
-                width: '100%',
-                padding: '0.5rem 0',
-                fontSize: '1rem',
-                outline: 'none'
-              }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', width: '100%', outline: 'none', fontSize: '1rem' }}
             />
           </div>
 
-          <select
-            value={activeProfileId}
-            onChange={(e) => {
-              if (e.target.value === 'manage') {
-                setIsProfileManagerOpen(true);
-              } else {
-                setActiveProfileId(e.target.value);
-              }
-            }}
-            className="glass-panel"
-            style={{
-              padding: '0.75rem',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--glass-border)',
-              outline: 'none',
-              cursor: 'pointer',
-              background: 'var(--bg-card)'
-            }}
-          >
-            <option value="all" style={{ background: '#1e293b' }}>{t('allPortfolios')}</option>
-            {profiles.map(p => (
-              <option key={p.id} value={p.id} style={{ background: '#1e293b' }}>{p.name}</option>
-            ))}
-            <option value="manage" style={{ background: '#1e293b' }}>⚙️ {t('manageProfiles')}</option>
-          </select>
+          <div className="profile-controls">
+            <select
+              value={activeProfileId}
+              onChange={(e) => {
+                if (e.target.value === 'manage') {
+                  setIsProfileManagerOpen(true);
+                } else {
+                  setActiveProfileId(e.target.value);
+                }
+              }}
+              className="profile-select glass-panel"
+            >
+              <option value="all" style={{ background: '#1e293b' }}>{t('allPortfolios')}</option>
+              {profiles.map(p => (
+                <option key={p.id} value={p.id} style={{ background: '#1e293b' }}>{p.name}</option>
+              ))}
+              <option value="manage" style={{ background: '#1e293b' }}>⚙️ {t('manageProfiles')}</option>
+            </select>
+
+            <button className="add-stock-btn" onClick={() => setIsModalOpen(true)}>
+              <Plus size={20} />
+              <span>{t('addStock')}</span>
+            </button>
+          </div>
         </div>
       </header>
 
