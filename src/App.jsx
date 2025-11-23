@@ -3,6 +3,7 @@ import { Activity, ArrowDown, ArrowUp, Plus, Search, Wallet } from 'lucide-react
 import { useEffect, useMemo, useState } from 'react';
 import AddStockModal from './components/AddStockModal';
 import LanguageToggle from './components/LanguageToggle';
+import ProfileManagerModal from './components/ProfileManagerModal';
 import StockCard from './components/StockCard';
 import { stocks as initialStocks } from './data/stocks';
 import { useLanguage } from './LanguageContext';
@@ -21,6 +22,7 @@ function App() {
   const [isPortfolioInitialized, setIsPortfolioInitialized] = useState(false);
   const [isMarketLoading, setIsMarketLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProfileManagerOpen, setIsProfileManagerOpen] = useState(false);
 
   // Load Portfolio (Guest: LocalStorage, User: MongoDB)
   useEffect(() => {
@@ -385,13 +387,8 @@ function App() {
           <select
             value={activeProfileId}
             onChange={(e) => {
-              if (e.target.value === 'new') {
-                const name = prompt("Enter new profile name:");
-                if (name) {
-                  const newId = Date.now().toString();
-                  setProfiles([...profiles, { id: newId, name, stocks: [] }]);
-                  setActiveProfileId(newId);
-                }
+              if (e.target.value === 'manage') {
+                setIsProfileManagerOpen(true);
               } else {
                 setActiveProfileId(e.target.value);
               }
@@ -406,11 +403,11 @@ function App() {
               background: 'var(--bg-card)'
             }}
           >
-            <option value="all" style={{ background: '#1e293b' }}>All Portfolios</option>
+            <option value="all" style={{ background: '#1e293b' }}>{t('allPortfolios')}</option>
             {profiles.map(p => (
               <option key={p.id} value={p.id} style={{ background: '#1e293b' }}>{p.name}</option>
             ))}
-            <option value="new" style={{ background: '#1e293b' }}>+ Create Profile</option>
+            <option value="manage" style={{ background: '#1e293b' }}>⚙️ {t('manageProfiles')}</option>
           </select>
         </div>
       </header>
@@ -438,7 +435,7 @@ function App() {
                 quantity={stock.quantity}
                 onDelete={(symbol) => removeFromPortfolio(symbol, stock.profileId)}
                 onUpdateNote={(symbol, note) => updateNote(symbol, note, stock.profileId)}
-                isLoading={isMarketLoading}
+                isLoading={isMarketLoading && stocks.length === 0}
                 profileName={activeProfileId === 'all' ? stock.profileName : null}
               />
             ))}
@@ -451,6 +448,15 @@ function App() {
         onClose={() => setIsModalOpen(false)}
         onAdd={addToPortfolio}
         availableStocks={stocks}
+      />
+
+      <ProfileManagerModal
+        isOpen={isProfileManagerOpen}
+        onClose={() => setIsProfileManagerOpen(false)}
+        profiles={profiles}
+        onUpdateProfiles={setProfiles}
+        activeProfileId={activeProfileId}
+        onSetActiveProfile={setActiveProfileId}
       />
     </div >
   );

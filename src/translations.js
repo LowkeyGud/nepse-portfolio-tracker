@@ -55,7 +55,14 @@ export const translations = {
     hotels: "Hotels",
     manufacturing: "Manufacturing",
     others: "Others",
-    unknown: "Unknown"
+    unknown: "Unknown",
+
+    // Profiles
+    manageProfiles: "Manage Profiles",
+    newProfileName: "New Profile Name",
+    confirmDeleteProfile: "Are you sure you want to delete this profile?",
+    allPortfolios: "All Portfolios",
+    createProfile: "Create Profile"
   },
   
   ne: {
@@ -114,6 +121,13 @@ export const translations = {
     hotels: "होटल",
     manufacturing: "उत्पादन",
     others: "अन्य",
-    unknown: "अज्ञात"
+    unknown: "अज्ञात",
+
+    // Profiles
+    manageProfiles: "प्रोफाइल व्यवस्थापन",
+    newProfileName: "नयाँ प्रोफाइल नाम",
+    confirmDeleteProfile: "के तपाईं यो प्रोफाइल मेटाउन निश्चित हुनुहुन्छ?",
+    allPortfolios: "सबै पोर्टफोलियो",
+    createProfile: "प्रोफाइल सिर्जना गर्नुहोस्"
   }
 };
