@@ -70,7 +70,12 @@ export const translations = {
     importBackup: "Import Backup",
     selectProfilesToImport: "Select Profiles to Import",
     importSelected: "Import Selected",
-    stocks: "stocks"
+    stocks: "stocks",
+    
+    // Sorting & Updates
+    sortByLoss: "Sort by Loss",
+    lastUpdated: "Last updated",
+    timeAgo: "ago"
   },
   
   ne: {
@@ -136,14 +141,6 @@ export const translations = {
     newProfileName: "नयाँ प्रोफाइल नाम",
     confirmDeleteProfile: "के तपाईं यो प्रोफाइल मेटाउन निश्चित हुनुहुन्छ?",
     allPortfolios: "सबै पोर्टफोलियो",
-    createProfile: "प्रोफाइल सिर्जना गर्नुहोस्",
-
-    // Data Management
-    dataManagement: "डाटा व्यवस्थापन",
-    exportBackup: "ब्याकअप निर्यात",
-    importBackup: "ब्याकअप आयात",
-    selectProfilesToImport: "आयात गर्न प्रोफाइलहरू छान्नुहोस्",
-    importSelected: "छानिएको आयात गर्नुहोस्",
-    stocks: "शेयरहरू"
+    timeAgo: "अघि"
   }
 };

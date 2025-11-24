@@ -19,13 +19,20 @@ function App() {
 
   // Portfolio State
   const [profiles, setProfiles] = useState([{ id: 'default', name: 'Main Portfolio', stocks: [] }]);
-  const [activeProfileId, setActiveProfileId] = useState('all');
+  const [activeProfileId, setActiveProfileId] = useState(() => {
+    const saved = localStorage.getItem('nepse-active-profile');
+    return saved || 'all';
+  });
   const [isPortfolioInitialized, setIsPortfolioInitialized] = useState(false);
   const [isMarketLoading, setIsMarketLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProfileManagerOpen, setIsProfileManagerOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importedProfiles, setImportedProfiles] = useState([]);
+  const [sortByChange, setSortByChange] = useState(() => {
+    const saved = localStorage.getItem('nepse-sort-by-change');
+    return saved ? JSON.parse(saved) : true;
+  });
 
   // Load Portfolio (Guest: LocalStorage, User: MongoDB)
   useEffect(() => {
@@ -139,9 +146,26 @@ function App() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
+
+    let interval;
+    if (isLive) {
+      interval = setInterval(fetchData, 10000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isLive]);
+
+  // Persist activeProfileId
+  useEffect(() => {
+    localStorage.setItem('nepse-active-profile', activeProfileId);
+  }, [activeProfileId]);
+
+  // Persist sortByChange
+  useEffect(() => {
+    localStorage.setItem('nepse-sort-by-change', JSON.stringify(sortByChange));
+  }, [sortByChange]);
 
   const addToPortfolio = (newStock) => {
     setProfiles(currentProfiles => {
@@ -202,7 +226,7 @@ function App() {
   }, [profiles, activeProfileId]);
 
   const portfolioStocks = useMemo(() => {
-    return displayedStocks.map(stock => {
+    const stocksWithData = displayedStocks.map(stock => {
       const marketData = stocks.find(s => s.symbol === stock.symbol) || {
         currentPrice: 0,
         previousPrice: 0,
@@ -211,8 +235,7 @@ function App() {
       };
       return {
         ...stock,
-        ...marketData, // This overrides name/sector from portfolio if available in market data
-        // Ensure we keep the portfolio specific fields
+        ...marketData,
         quantity: stock.quantity,
         note: stock.note,
         profileName: stock.profileName,
@@ -221,11 +244,18 @@ function App() {
     }).filter(stock =>
       stock.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
       stock.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ).sort((a, b) => {
-      const getChange = (s) => s.previousPrice ? ((s.currentPrice - s.previousPrice) / s.previousPrice) : 0;
-      return getChange(a) - getChange(b);
-    });
-  }, [displayedStocks, stocks, searchTerm]);
+    );
+
+    // Conditionally sort if sortByChange is true
+    if (sortByChange) {
+      return stocksWithData.sort((a, b) => {
+        const getChange = (s) => s.previousPrice ? ((s.currentPrice - s.previousPrice) / s.previousPrice) : 0;
+        return getChange(a) - getChange(b);
+      });
+    }
+
+    return stocksWithData;
+  }, [displayedStocks, stocks, searchTerm, sortByChange]);
 
   // Calculate Portfolio Totals
   const portfolioTotalValue = portfolioStocks.reduce((acc, stock) => acc + (stock.currentPrice * stock.quantity), 0);
