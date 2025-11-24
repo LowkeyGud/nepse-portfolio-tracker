@@ -262,6 +262,16 @@ function App() {
   const portfolioDailyChange = portfolioStocks.reduce((acc, stock) => acc + ((stock.currentPrice - stock.previousPrice) * stock.quantity), 0);
   const isPortfolioPositive = portfolioDailyChange >= 0;
 
+  // Helper to format "time ago"
+  const getTimeAgo = (date) => {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return `${seconds}s ${t('timeAgo') || 'ago'}`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ${t('timeAgo') || 'ago'}`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ${t('timeAgo') || 'ago'}`;
+  };
+
   // Export/Import Handlers
   const handleExport = () => {
     const dataStr = JSON.stringify(profiles, null, 2);
@@ -339,6 +349,9 @@ function App() {
             <div className="market-status">
               <div className={`status-dot ${isLive ? 'live' : ''}`}></div>
               {isLive ? t('live') : t('paused')}
+              <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', opacity: 0.7 }}>
+                ({t('lastUpdated') || 'Last updated'}: {getTimeAgo(lastUpdated)})
+              </span>
             </div>
             <LanguageToggle />
             <SignedIn>
@@ -409,6 +422,22 @@ function App() {
             <button className="add-stock-btn" onClick={() => setIsModalOpen(true)}>
               <Plus size={20} />
               <span>{t('addStock')}</span>
+            </button>
+
+            <button
+              className="glass-panel"
+              onClick={() => setSortByChange(!sortByChange)}
+              style={{
+                padding: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                cursor: 'pointer',
+                color: sortByChange ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                border: sortByChange ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)'
+              }}
+            >
+              {sortByChange ? '✓' : ''} {t('sortByLoss') || 'Sort by Loss'}
             </button>
           </div>
         </div>
