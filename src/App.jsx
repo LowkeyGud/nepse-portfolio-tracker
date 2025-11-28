@@ -1,5 +1,5 @@
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
-import { Activity, ArrowDown, ArrowUp, Plus, Search, Wallet } from 'lucide-react';
+import { Activity, ArrowDown, ArrowUp, LayoutGrid, Plus, Search, Table, Trash2, Wallet } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import AddStockModal from './components/AddStockModal';
 import ImportSelectionModal from './components/ImportSelectionModal';
@@ -32,6 +32,10 @@ function App() {
   const [sortByChange, setSortByChange] = useState(() => {
     const saved = localStorage.getItem('nepse-sort-by-change');
     return saved ? JSON.parse(saved) : true;
+  });
+  const [viewMode, setViewMode] = useState(() => {
+    const saved = localStorage.getItem('nepse-view-mode');
+    return saved || 'card';
   });
 
   // Load Portfolio (Guest: LocalStorage, User: MongoDB)
@@ -166,6 +170,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem('nepse-sort-by-change', JSON.stringify(sortByChange));
   }, [sortByChange]);
+
+  // Persist viewMode
+  useEffect(() => {
+    localStorage.setItem('nepse-view-mode', viewMode);
+  }, [viewMode]);
 
   const addToPortfolio = (newStock) => {
     setProfiles(currentProfiles => {
@@ -439,6 +448,39 @@ function App() {
             >
               {sortByChange ? '✓' : ''} {t('sortByLoss') || 'Sort by Loss'}
             </button>
+
+            <div className="glass-panel" style={{ padding: '0.5rem', display: 'flex', gap: '0.25rem' }}>
+              <button
+                onClick={() => setViewMode('card')}
+                style={{
+                  padding: '0.5rem',
+                  background: viewMode === 'card' ? 'var(--accent-primary)' : 'transparent',
+                  color: viewMode === 'card' ? 'white' : 'var(--text-secondary)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                <LayoutGrid size={18} />
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                style={{
+                  padding: '0.5rem',
+                  background: viewMode === 'table' ? 'var(--accent-primary)' : 'transparent',
+                  color: viewMode === 'table' ? 'white' : 'var(--text-secondary)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                <Table size={18} />
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -452,7 +494,7 @@ function App() {
             <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{t('portfolioEmpty')}</h3>
             <p>{t('portfolioEmptyDesc')}</p>
           </div>
-        ) : (
+        ) : viewMode === 'card' ? (
           <main style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
@@ -471,6 +513,78 @@ function App() {
               />
             ))}
           </main>
+        ) : (
+          <div className="glass-panel" style={{ padding: '1rem', overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid var(--glass-border)' }}>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600 }}>Symbol</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600 }}>Name</th>
+                  {activeProfileId === 'all' && <th style={{ padding: '1rem', textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600 }}>Profile</th>}
+                  <th style={{ padding: '1rem', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600 }}>Quantity</th>
+                  <th style={{ padding: '1rem', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600 }}>Price</th>
+                  <th style={{ padding: '1rem', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600 }}>Change</th>
+                  <th style={{ padding: '1rem', textAlign: 'right', color: 'var(--text-secondary)', fontWeight: 600 }}>Total Value</th>
+                  <th style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)', fontWeight: 600 }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {portfolioStocks.map((stock) => {
+                  const diff = (stock.currentPrice || 0) - (stock.previousPrice || 0);
+                  const percentChange = stock.previousPrice ? ((diff / stock.previousPrice) * 100) : 0;
+                  const isPositive = diff > 0;
+                  const totalValue = (stock.currentPrice || 0) * stock.quantity;
+
+                  return (
+                    <tr
+                      key={`${stock.symbol}-${stock.profileId}`}
+                      style={{
+                        borderBottom: '1px solid var(--glass-border)',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--accent-primary)' }}>{stock.symbol}</td>
+                      <td style={{ padding: '1rem', color: 'var(--text-primary)' }}>{stock.name}</td>
+                      {activeProfileId === 'all' && <td style={{ padding: '1rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{stock.profileName}</td>}
+                      <td style={{ padding: '1rem', textAlign: 'right', color: 'var(--text-primary)' }}>{stock.quantity.toLocaleString()}</td>
+                      <td style={{ padding: '1rem', textAlign: 'right', color: 'var(--text-primary)' }}>Rs. {(stock.currentPrice || 0).toLocaleString()}</td>
+                      <td style={{
+                        padding: '1rem',
+                        textAlign: 'right',
+                        color: isPositive ? 'var(--accent-success)' : 'var(--accent-danger)',
+                        fontWeight: 600
+                      }}>
+                        {isPositive ? '+' : ''}{percentChange.toFixed(2)}%
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        Rs. {totalValue.toLocaleString()}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
+                        <button
+                          onClick={() => removeFromPortfolio(stock.symbol, stock.profileId)}
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            color: 'var(--accent-danger)',
+                            border: 'none',
+                            padding: '0.5rem',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )
       }
 
